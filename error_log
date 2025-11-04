@@ -1,0 +1,1 @@
+[28-Nov-2020 04:33:54 UTC] PHP Fatal error:  Trait method hasTooManyLoginAttempts has not been applied, because there are collisions with other trait methods on App\Http\Controllers\Frontend\AuthController in /home/webreactrs/public_html/cgkalar/app/Http/Controllers/Frontend/AuthController.php on line 12
