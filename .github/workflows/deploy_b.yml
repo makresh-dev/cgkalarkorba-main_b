@@ -1,0 +1,53 @@
+name: 🚀 Deploy Laravel App
+
+on:
+  push:
+    branches:
+    - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Setup PHP
+      uses: shivammathur/setup-php@v2
+      with:
+        php-version: '7.4'
+        extensions: mbstring, xml, bcmath, intl, sqlite, mysql
+        coverage: none
+
+    - name: Install Dependencies
+      run: composer install --no-interaction --prefer-dist --optimize-autoloader
+- 
+  name: Verify Laravel App Loads
+  run: php artisan --version
+
+- name: Deploy to EC2
+  env:
+    SSH_KEY: ${{ secrets.KEY }}
+    SSH_USER: ${{ secrets.USER }}
+    SSH_HOST: ${{ secrets.HOST }}
+  run: |
+    sudo apt-get update && sudo apt-get install -y openssh-client
+    eval $(ssh-agent -s)
+    echo "$SSH_KEY" | tr -d '\r' | ssh-add -
+    ssh -o StrictHostKeyChecking=no $SSH_USER@$SSH_HOST "bash -s" < ./deploy.sh
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install SSH client
+        run: sudo apt-get update && sudo apt-get install -y openssh-client
+
+      - name: Add SSH key
+        uses: webfactory/ssh-agent@v0.8.1
+        with:
+          ssh-private-key: ${{ secrets.KEY }}
+
+      - name: Run deploy script on server
+        run: |
+          ssh -o StrictHostKeyChecking=no ${{ secrets.USER }}@${{ secrets.HOST }} "bash -s" < ./deploy_remote.sh
