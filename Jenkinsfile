@@ -2,6 +2,7 @@ pipeline {
     agent any
 
     triggers {
+        // 🔁 Trigger every 2 minutes (or replace with GitHub webhook)
         pollSCM('H/2 * * * *')
     }
 
@@ -28,38 +29,38 @@ pipeline {
             steps {
                 echo "🚀 Deploying code to EC2 instance..."
                 sshagent(credentials: ["${SSH_CREDENTIALS}"]) {
-                    sh '''
-                    ssh -o StrictHostKeyChecking=no ${DEPLOY_USER}@${DEPLOY_SERVER} <<EOF
-                        echo "📦 Starting deployment at $(date)"
+                    sh """
+                    ssh -o StrictHostKeyChecking=no ${DEPLOY_USER}@${DEPLOY_SERVER} "
+                        echo '📦 Starting deployment at \$(date)'
 
                         sudo mkdir -p ${APP_DIR}
                         sudo chown -R ${DEPLOY_USER}:www-data ${APP_DIR}
                         cd ${APP_DIR}
 
-                        echo "🔁 Pulling latest code..."
-                        if [ ! -d ".git" ]; then
+                        echo '🔁 Pulling latest code...'
+                        if [ ! -d .git ]; then
                             git clone ${GIT_REPO} .
                         else
                             git fetch --all
                             git reset --hard origin/${GIT_BRANCH}
                         fi
 
-                        echo "📦 Installing dependencies..."
+                        echo '📦 Installing dependencies...'
                         composer install --no-dev --optimize-autoloader
 
-                        echo "⚙️ Running Laravel optimizations..."
+                        echo '⚙️ Running Laravel optimizations...'
                         php artisan migrate --force
                         php artisan config:clear
                         php artisan config:cache
                         php artisan view:clear
 
-                        echo "🔄 Reloading Nginx..."
+                        echo '🔄 Reloading Nginx...'
                         sudo systemctl daemon-reload
                         sudo systemctl reload nginx
 
-                        echo "✅ Deployment completed successfully!"
-                    EOF
-                    '''
+                        echo '✅ Deployment completed successfully!'
+                    "
+                    """
                 }
             }
         }
@@ -67,7 +68,7 @@ pipeline {
 
     post {
         success {
-            echo "✅ Deployment successful — EC2 instance updated!"
+            echo "✅ Deployment successful — EC2 instance updated with latest code!"
         }
         failure {
             echo "❌ Deployment failed. Check Jenkins logs for details."
