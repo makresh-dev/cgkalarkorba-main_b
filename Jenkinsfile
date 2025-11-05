@@ -10,7 +10,7 @@ pipeline {
     stage('Checkout') {
       steps {
         sshagent (credentials: ['github-repo-key']) {
-          git branch: 'main', url: 'git@github.com:<your-org>/<repo>.git'
+          git branch: 'main', url: 'git@github.com:makresh-dev/cgkalarkorba-main_b.git'
         }
       }
     }
@@ -24,7 +24,7 @@ pipeline {
             scp -o StrictHostKeyChecking=no app.tar.gz ubuntu@${APP_SERVER_IP}:/tmp/
             ssh -o StrictHostKeyChecking=no ubuntu@${APP_SERVER_IP} << 'EOF'
               set -e
-              cd /var/www/yourapp
+              cd /var/www/cgkalarkorba-main_a
               rm -rf old_release
               mv current old_release || true
               mkdir -p current
