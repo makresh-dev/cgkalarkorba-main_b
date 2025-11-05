@@ -2,45 +2,58 @@ pipeline {
     agent any
 
     environment {
-        GIT_REPO = 'https://github.com/makresh-dev/cgkalarkorba-main_b.git' // Replace with your repo URL
-        GIT_BRANCH = 'main'
-        GIT_CREDENTIALS = 'github-token' // Jenkins credentials ID for GitHub token
+        // 🔧 Configuration Variables
+        GIT_REPO = 'https://github.com/makresh-dev/cgkalarkorba-main_b.git'
+        GIT_BRANCH = 'main'                     // Change if your repo uses a different branch
+        GIT_CREDENTIALS = 'github-token'        // Jenkins GitHub token ID
+        SSH_CREDENTIALS = 'deploy-key'          // Jenkins EC2 SSH key ID
+        DEPLOY_USER = 'ubuntu'                  // EC2 username
+        DEPLOY_SERVER = '52.45.58.115'          // EC2 Public IP or domain
     }
 
     stages {
 
-        stage('Test: Checkout Repository') {
+        // ============================================================
+        stage('1️⃣ Test GitHub → Jenkins Connection') {
             steps {
                 echo "🔍 Testing GitHub connection..."
-                echo "Cloning repository: ${GIT_REPO}"
                 git branch: "${GIT_BRANCH}", credentialsId: "${GIT_CREDENTIALS}", url: "${GIT_REPO}"
-                echo "✅ Repository cloned successfully!"
+                echo "✅ Successfully cloned the repository from GitHub!"
+                sh 'ls -la' // show repository contents
             }
         }
 
-        stage('Verify Files') {
+        // ============================================================
+        stage('2️⃣ Test Jenkins → EC2 SSH Connection') {
             steps {
-                echo "📂 Listing project files..."
-                sh 'ls -la'
+                echo "🔍 Testing SSH connection to EC2 instance..."
+                sshagent(credentials: ["${SSH_CREDENTIALS}"]) {
+                    sh '''
+                    ssh -o StrictHostKeyChecking=no ${DEPLOY_USER}@${DEPLOY_SERVER} "echo '✅ SSH connection successful from Jenkins to EC2!' && hostname && whoami && uptime"
+                    '''
+                }
             }
         }
 
-        stage('Git Info') {
+        // ============================================================
+        stage('3️⃣ Test Bi-directional Validation') {
             steps {
-                echo "📄 Displaying latest commit info..."
-                sh '''
-                git log -1 --pretty=format:"%h - %an, %ar : %s"
-                '''
+                echo "🔁 Performing bi-directional validation..."
+                sshagent(credentials: ["${SSH_CREDENTIALS}"]) {
+                    sh '''
+                    ssh -o StrictHostKeyChecking=no ${DEPLOY_USER}@${DEPLOY_SERVER} "ls -la /var/www || echo '⚠️ Path not found'"
+                    '''
+                }
             }
         }
     }
 
     post {
         success {
-            echo "✅ GitHub connection test successful!"
+            echo "🎉 All connections (GitHub ↔ Jenkins ↔ EC2) are working successfully!"
         }
         failure {
-            echo "❌ GitHub connection test failed! Check credentials or network."
+            echo "❌ Connection test failed — check credentials or network settings."
         }
     }
 }
