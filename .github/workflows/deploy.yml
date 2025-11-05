@@ -26,16 +26,12 @@ jobs:
     - name: Verify Laravel App Loads
       run: php artisan --version
 
-    - name: Remove old known_hosts entry
-      run: |
-        ssh-keygen -R ${{ secrets.HOST }} || true
-
     - name: Deploy to Server via SSH
       uses: appleboy/ssh-action@v0.1.7
       with:
         host: ${{ secrets.HOST }}
         username: ${{ secrets.USERNAME }}
-        key: ${{ secrets.SSH_KEY }}
+        key: ${{ secrets.DEPLOY_KEY }}
         script: |
           cd ${{ secrets.APP_DIR }}
           ./deploy.sh
