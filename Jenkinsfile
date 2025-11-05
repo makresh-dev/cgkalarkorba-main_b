@@ -2,68 +2,45 @@ pipeline {
     agent any
 
     environment {
-        DEPLOY_SERVER = '52.45.58.115'
-        DEPLOY_USER = 'ubuntu'
-        APP_DIR = '/var/www/cgkalarkorba-main_b'
-        GIT_CREDENTIALS = 'github-token'
-        SSH_CREDENTIALS = 'deploy-key'
+        GIT_REPO = 'https://github.com/makresh-dev/cgkalarkorba-main_b.git' // Replace with your repo URL
+        GIT_BRANCH = 'main'
+        GIT_CREDENTIALS = 'github-token' // Jenkins credentials ID for GitHub token
     }
 
     stages {
 
-        stage('Checkout') {
+        stage('Test: Checkout Repository') {
             steps {
-                git branch: 'test_1_branch',
-                    credentialsId: "${GIT_CREDENTIALS}",
-                    url: 'https://github.com/makresh-dev/cgkalarkorba-main_b.git'
+                echo "🔍 Testing GitHub connection..."
+                echo "Cloning repository: ${GIT_REPO}"
+                git branch: "${GIT_BRANCH}", credentialsId: "${GIT_CREDENTIALS}", url: "${GIT_REPO}"
+                echo "✅ Repository cloned successfully!"
             }
         }
 
-        stage('Install Dependencies') {
+        stage('Verify Files') {
             steps {
+                echo "📂 Listing project files..."
+                sh 'ls -la'
+            }
+        }
+
+        stage('Git Info') {
+            steps {
+                echo "📄 Displaying latest commit info..."
                 sh '''
-                echo "Installing PHP dependencies..."
-                composer install --no-dev --optimize-autoloader
+                git log -1 --pretty=format:"%h - %an, %ar : %s"
                 '''
-            }
-        }
-
-        stage('Run Tests') {
-            steps {
-                sh '''
-                echo "Running Laravel tests..."
-                php artisan test || true
-                '''
-            }
-        }
-
-        stage('Deploy to Server') {
-            steps {
-                sshagent(credentials: ["${SSH_CREDENTIALS}"]) {
-                    sh '''
-                    echo "Deploying to EC2 server..."
-                    ssh -o StrictHostKeyChecking=no ${DEPLOY_USER}@${DEPLOY_SERVER} << 'EOF'
-                        cd ${APP_DIR}
-                        git pull origin main
-                        composer install --no-dev --optimize-autoloader
-                        php artisan migrate --force
-                        php artisan config:cache
-                        php artisan route:cache
-                        php artisan view:clear
-                        sudo systemctl reload nginx
-                    EOF
-                    '''
-                }
             }
         }
     }
 
     post {
         success {
-            echo "✅ Deployment completed successfully!"
+            echo "✅ GitHub connection test successful!"
         }
         failure {
-            echo "❌ Deployment failed! Check Jenkins logs."
+            echo "❌ GitHub connection test failed! Check credentials or network."
         }
     }
 }
