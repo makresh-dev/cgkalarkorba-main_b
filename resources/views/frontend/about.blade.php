@@ -1,6 +1,6 @@
 @extends('frontend.layouts.app')
 
-@section('title', 'हमारे बारे में')
+@section('title', 'हमारे बारे में About Us' )
 
 @section('content')
   <main id="main">
