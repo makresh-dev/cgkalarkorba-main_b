@@ -16,14 +16,6 @@ pipeline {
             }
         }
 
-        stage('Install Dependencies') {
-            steps {
-                sh '''
-                composer install --no-interaction --no-progress --prefer-dist
-                '''
-            }
-        }
-
         stage('Run Tests') {
             steps {
                 sh '''
