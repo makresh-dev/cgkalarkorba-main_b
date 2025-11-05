@@ -2,9 +2,9 @@ pipeline {
     agent any
 
     environment {
-        DEPLOY_USER = '${{ secrets.USERNAME }}'
-        DEPLOY_HOST = '${{ secrets.HOST }}'
-        DEPLOY_PATH = '${{ secrets.APP_DIR }}'
+        DEPLOY_USER = 'ubuntu'
+        DEPLOY_HOST = '52.45.58.115'
+        DEPLOY_PATH = '/var/www/cgkalarkorba-main_a'
         SSH_CREDENTIALS = 'ec2-ssh'
     }
 
