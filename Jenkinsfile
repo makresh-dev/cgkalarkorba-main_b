@@ -41,7 +41,7 @@ pipeline {
                 echo "🔁 Performing bi-directional validation..."
                 sshagent(credentials: ["${SSH_CREDENTIALS}"]) {
                     sh '''
-                    ssh -o StrictHostKeyChecking=no ${DEPLOY_USER}@${DEPLOY_SERVER} "ls -la /var/www || echo '⚠️ Path not found'"
+                    ssh -o StrictHostKeyChecking=no ${DEPLOY_USER}@${DEPLOY_SERVER} "ls -la /var/www/cgkaralarkorba-main_b || echo '⚠️ Path not found'"
                     '''
                 }
             }
