@@ -31,7 +31,7 @@ jobs:
       with:
         host: ${{ secrets.HOST }}
         username: ${{ secrets.USERNAME }}
-        key: ${{ DEPLOY_KEY }}
+        key: ${{ secrets.SSH_KEY }}
         script: |
           cd ${{ secrets.APP_DIR }}
           ./deploy.sh
