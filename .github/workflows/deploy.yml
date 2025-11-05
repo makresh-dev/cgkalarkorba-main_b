@@ -28,7 +28,7 @@ jobs:
 
     - name: Remove old known_hosts entry
       run: |
-        ssh-keygen -R ${{ secrets.EC2_HOST }} || true
+        ssh-keygen -R ${{ secrets.HOST }} || true
 
     - name: Deploy to Server via SSH
       uses: appleboy/ssh-action@v0.1.7
