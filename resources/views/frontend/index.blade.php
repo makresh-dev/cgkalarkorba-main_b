@@ -23,7 +23,7 @@
         <div class="carousel-item active" style="background-image: url({{ asset('public/assets/img/slide/DSC_7415.jpg') }})">
           <div class="carousel-container">
             <div class="container">
-              <h2 class="animate__animated animate__fadeInDown">छत्तीसगढ़ कलार <span>महासभा Korba</span></h2>
+              <h2 class="animate__animated animate__fadeInDown">छत्तीसगढ़ कलार <span>महासभा</span></h2>
               <p class="animate__animated animate__fadeInUp">कोरबा परिक्षेत्र <br/>युवक-युवती पंजीयन/आवेदन</p>
               <a href="{{ route('user.register') }}" class="btn-get-started animate__animated animate__fadeInUp scrollto">पंजीयन करे</a>
             </div>
