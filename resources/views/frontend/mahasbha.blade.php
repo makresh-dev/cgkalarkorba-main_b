@@ -1,6 +1,6 @@
 @extends('frontend.layouts.app')
 
-@section('title', 'छत्तीसगढ़ कलार महासभा Korba' )
+@section('title', 'छत्तीसगढ़ कलार महासभा' )
 
 @section('content')
 	<main id="main">
