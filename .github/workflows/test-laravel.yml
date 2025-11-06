@@ -25,13 +25,16 @@ jobs:
           --health-retries=10
 
     steps:
+      # Step 1: Checkout code
       - name: 🧩 Checkout repository
         uses: actions/checkout@v3
 
+      # Step 2: Build Laravel Docker image
       - name: 🐳 Build Laravel Docker image
         run: docker build -t laravel-test -f docker/Dockerfile .
 
-      - name: ⚙️ Wait for MySQL to become ready
+      # Step 3: Wait for MySQL
+      - name: ⚙️ Wait for MySQL to be ready
         run: |
           for i in {1..10}; do
             nc -z 127.0.0.1 3306 && echo "✅ MySQL is up!" && break
@@ -39,6 +42,7 @@ jobs:
             sleep 5
           done
 
+      # Step 4: Run migrations
       - name: ⚙️ Run Laravel migrations
         run: |
           docker run --rm \
@@ -51,7 +55,9 @@ jobs:
             -e DB_PASSWORD=root \
             laravel-test php artisan migrate --force
 
+      # Step 5: Run PHPUnit tests
       - name: 🧪 Run PHPUnit tests
+        id: tests
         run: |
           docker run --rm \
             --network host \
@@ -62,3 +68,53 @@ jobs:
             -e DB_USERNAME=root \
             -e DB_PASSWORD=root \
             laravel-test vendor/bin/phpunit --testdox
+
+      # Step 6: Slack Notification (✅ Success)
+      - name: ✅ Notify Slack - Success
+        if: ${{ success() }}
+        uses: slackapi/slack-github-action@v1.27.0
+        with:
+          payload: |
+            {
+              "text": "✅ *Laravel Tests Passed!*",
+              "attachments": [
+                {
+                  "color": "good",
+                  "fields": [
+                    { "title": "Repository", "value": "${{ github.repository }}", "short": true },
+                    { "title": "Branch", "value": "${{ github.ref_name }}", "short": true },
+                    { "title": "Commit", "value": "${{ github.sha }}", "short": true }
+                  ],
+                  "footer": "GitHub Actions • Laravel CI",
+                  "ts": "$(date +%s)"
+                }
+              ]
+            }
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+          SLACK_WEBHOOK_TYPE: INCOMING_WEBHOOK
+
+      # Step 7: Slack Notification (❌ Failure)
+      - name: ❌ Notify Slack - Failure
+        if: ${{ failure() }}
+        uses: slackapi/slack-github-action@v1.27.0
+        with:
+          payload: |
+            {
+              "text": "🚨 *Laravel Tests Failed!*",
+              "attachments": [
+                {
+                  "color": "danger",
+                  "fields": [
+                    { "title": "Repository", "value": "${{ github.repository }}", "short": true },
+                    { "title": "Branch", "value": "${{ github.ref_name }}", "short": true },
+                    { "title": "Commit", "value": "${{ github.sha }}", "short": true }
+                  ],
+                  "footer": "GitHub Actions • Laravel CI",
+                  "ts": "$(date +%s)"
+                }
+              ]
+            }
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+          SLACK_WEBHOOK_TYPE: INCOMING_WEBHOOK
