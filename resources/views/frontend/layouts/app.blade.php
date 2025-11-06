@@ -124,7 +124,7 @@
 
           <div class="col-lg-3 col-md-6">
             <div class="footer-info">
-              <h5>छत्तीसगढ़ कलार महासभा Korba Korba</h5>
+              <h5>छत्तीसगढ़ कलार महासभा</h5>
               <p>
                  कोरबा परिक्षेत्र <br>
                  युवक-युवती पंजीयन/आवेदन<br><br>
