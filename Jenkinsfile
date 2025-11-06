@@ -13,7 +13,7 @@ pipeline {
         GIT_CREDENTIALS = 'github-token'
         SSH_CREDENTIALS = 'deploy-key'
         DEPLOY_USER = 'ubuntu'
-        DEPLOY_SERVER = '52.4.58.15'
+        DEPLOY_SERVER = '52.45.58.115'
         APP_DIR = '/var/www/cgkalarkorba-main_b'
         PHP_SERVICE = 'php7.4-fpm'
     }
