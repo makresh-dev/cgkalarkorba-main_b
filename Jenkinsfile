@@ -29,7 +29,7 @@ pipeline {
             steps {
                 echo "🚀 Deploying code to EC2 instance..."
                 sshagent(credentials: ["${SSH_CREDENTIALS}"]) {
-                    sh '''
+                    sh """
                         ssh -o StrictHostKeyChecking=no ${DEPLOY_USER}@${DEPLOY_SERVER} '
                             set -euo pipefail
                             echo "📦 Starting deployment at $(date)"
@@ -65,7 +65,7 @@ pipeline {
 
                             echo "✅ Deployment completed successfully!"
                         '
-                    '''
+                    """
                 }
             }
         }
