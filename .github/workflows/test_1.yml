@@ -1,0 +1,33 @@
+name: 🔐 Test SSH Connection to EC2
+
+on:
+  workflow_dispatch:  # 👈 allows manual trigger from GitHub UI
+
+jobs:
+  test-ssh:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 🧾 Show runner environment
+        run: |
+          echo "GitHub Runner is ready"
+          uname -a
+          whoami
+
+      - name: 🔍 Remove old host fingerprint (if any)
+        run: |
+          ssh-keygen -R ${{ secrets.HOST }} || true
+
+      - name: 🚀 Test SSH connection to EC2
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host: ${{ secrets.HOST }}
+          username: ${{ secrets.USER }}
+          key: ${{ secrets.ACTIONS_SSH_KEY }}
+          script: |
+            echo "✅ SSH connection established successfully!"
+            whoami
+            hostname
+            pwd
+            uptime
+            ls -la /home/${USER}
