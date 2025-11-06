@@ -27,52 +27,91 @@ pipeline {
             }
         }
 
+    pipeline {
+    agent any
+
+    triggers {
+        // 🔁 Trigger every 2 minutes (replace with GitHub webhook if needed)
+        pollSCM('H/2 * * * *')
+        // OR comment the above and use webhook in GitHub pointing to your Jenkins server
+    }
+
+    environment {
+        GIT_REPO = 'https://github.com/makresh-dev/cgkalarkorba-main_b.git'
+        GIT_BRANCH = 'main'
+        GIT_CREDENTIALS = 'github-token'
+        SSH_CREDENTIALS = 'deploy-key'
+        DEPLOY_USER = 'ubuntu'
+        DEPLOY_SERVER = '52.45.58.115'
+        APP_DIR = '/var/www/cgkalarkorba-main_b'
+        PHP_SERVICE = 'php7.4-fpm'
+    }
+
+    stages {
+
+        stage('Checkout Code from GitHub') {
+            steps {
+                echo "🔍 Fetching latest code from GitHub..."
+                git branch: "${GIT_BRANCH}", credentialsId: "${GIT_CREDENTIALS}", url: "${GIT_REPO}"
+            }
+        }
+
         stage('Deploy to EC2') {
             steps {
                 echo "🚀 Deploying code to EC2 instance..."
-
                 sshagent(credentials: ["${SSH_CREDENTIALS}"]) {
-                    sh """
-                    ssh -o StrictHostKeyChecking=no ${DEPLOY_USER}@${DEPLOY_SERVER} << 'EOF'
-                        echo '📦 Starting deployment at \$(date)'
-                        # Ensure app directory exists
-                        sudo mkdir -p ${APP_DIR}
-                        sudo chown -R ${DEPLOY_USER}:www-data ${APP_DIR}
-                        cd ${APP_DIR}
+                sh '''#!/usr/bin/env bash
+                ssh -o StrictHostKeyChecking=no ${DEPLOY_USER}@${DEPLOY_SERVER} '
+                set -euo pipefail
 
-                        echo '🔁 Pulling latest code...'
-                        if [ ! -d .git ]; then
-                            git clone ${GIT_REPO} .
-                        else
-                            git fetch --all
-                            git reset --hard origin/${GIT_BRANCH}
-                        fi
+                echo "📦 Starting deployment at $(date)"
 
-                        echo '📦 Installing dependencies...'
-                        composer install --no-dev --optimize-autoloader
+                sudo mkdir -p ${APP_DIR}
+                sudo chown -R ${DEPLOY_USER}:www-data ${APP_DIR}
+                cd ${APP_DIR}
 
-                        echo '🧹 Fixing file ownership and permissions...'
-                        sudo chown -R www-data:www-data storage bootstrap/cache
-                        sudo chmod -R 775 storage bootstrap/cache
+                echo "🔁 Pulling latest code..."
+                if [ ! -d .git ]; then
+                  git clone ${GIT_REPO} .
+                else
+                  git fetch --all
+                  git reset --hard origin/${GIT_BRANCH}
+                fi
 
-                        echo '⚙️ Running Laravel optimizations...'
-                        php artisan migrate --force
-                        php artisan config:clear
-                        php artisan config:cache
-                        php artisan view:clear
+                echo "📦 Installing dependencies..."
+                composer install --no-dev --optimize-autoloader
 
-                        echo '🔄 Restarting PHP-FPM and reloading Nginx...'
-                        sudo systemctl restart ${PHP_SERVICE}
-                        sudo systemctl reload nginx
+                echo "🧹 Fixing file ownership and permissions..."
+                sudo chown -R www-data:www-data storage bootstrap/cache
+                sudo chmod -R 775 storage bootstrap/cache
 
-                        echo '✅ Deployment completed successfully!'
-                    EOF
-                    """
+                echo "⚙️ Running Laravel optimizations..."
+                php artisan migrate --force
+                php artisan config:clear
+                php artisan config:cache
+                php artisan view:clear
+
+                echo "🔄 Restarting PHP-FPM and reloading Nginx..."
+                sudo systemctl restart php7.4-fpm || true
+                sudo systemctl reload nginx
+
+                echo "✅ Deployment completed successfully!"
+            '     
+            '''
                 }
-            }
+              }
+          }
+
+    post {
+        success {
+            echo "✅ Deployment successful — EC2 instance updated with latest code!"
+        }
+        failure {
+            echo "❌ Deployment failed. Check Jenkins logs for details."
         }
     }
-
+}
+    
     post {
         success {
             echo "✅ Deployment successful — EC2 instance updated with latest code!"
