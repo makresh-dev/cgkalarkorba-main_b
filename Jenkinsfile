@@ -2,16 +2,14 @@ pipeline {
     agent any
 
     triggers {
-        // 🔁 Trigger every 2 minutes (replace with GitHub webhook if needed)
+        // 🔁 Poll every 2 minutes (optional, can replace with GitHub webhook)
         pollSCM('H/2 * * * *')
-        // OR comment the above and use webhook in GitHub pointing to your Jenkins server
     }
 
     environment {
         GIT_REPO = 'https://github.com/makresh-dev/cgkalarkorba-main_b.git'
         GIT_BRANCH = 'main'
-        GIT_CREDENTIALS = 'github-token'
-        SSH_CREDENTIALS = 'deploy-key'
+        SSH_CREDENTIALS = 'ubuntu'        // ✅ SSH key credentials ID in Jenkins
         DEPLOY_USER = 'ubuntu'
         DEPLOY_SERVER = '52.45.58.115'
         APP_DIR = '/var/www/cgkalarkorba-main_b'
@@ -23,36 +21,7 @@ pipeline {
         stage('Checkout Code from GitHub') {
             steps {
                 echo "🔍 Fetching latest code from GitHub..."
-                git branch: "${GIT_BRANCH}", credentialsId: "${GIT_CREDENTIALS}", url: "${GIT_REPO}"
-            }
-        }
-
-    pipeline {
-    agent any
-
-    triggers {
-        // 🔁 Trigger every 2 minutes (replace with GitHub webhook if needed)
-        pollSCM('H/2 * * * *')
-        // OR comment the above and use webhook in GitHub pointing to your Jenkins server
-    }
-
-    environment {
-        GIT_REPO = 'https://github.com/makresh-dev/cgkalarkorba-main_b.git'
-        GIT_BRANCH = 'main'
-        GIT_CREDENTIALS = 'github-token'
-        SSH_CREDENTIALS = 'deploy-key'
-        DEPLOY_USER = 'ubuntu'
-        DEPLOY_SERVER = '52.45.58.115'
-        APP_DIR = '/var/www/cgkalarkorba-main_b'
-        PHP_SERVICE = 'php7.4-fpm'
-    }
-
-    stages {
-
-        stage('Checkout Code from GitHub') {
-            steps {
-                echo "🔍 Fetching latest code from GitHub..."
-                git branch: "${GIT_BRANCH}", credentialsId: "${GIT_CREDENTIALS}", url: "${GIT_REPO}"
+                git branch: "${GIT_BRANCH}", url: "${GIT_REPO}"
             }
         }
 
@@ -60,58 +29,48 @@ pipeline {
             steps {
                 echo "🚀 Deploying code to EC2 instance..."
                 sshagent(credentials: ["${SSH_CREDENTIALS}"]) {
-                sh '''#!/usr/bin/env bash
-                ssh -o StrictHostKeyChecking=no ${DEPLOY_USER}@${DEPLOY_SERVER} '
-                set -euo pipefail
+                    sh '''
+                        ssh -o StrictHostKeyChecking=no ${DEPLOY_USER}@${DEPLOY_SERVER} '
+                            set -euo pipefail
+                            echo "📦 Starting deployment at $(date)"
 
-                echo "📦 Starting deployment at $(date)"
+                            sudo mkdir -p ${APP_DIR}
+                            sudo chown -R ${DEPLOY_USER}:www-data ${APP_DIR}
+                            cd ${APP_DIR}
 
-                sudo mkdir -p ${APP_DIR}
-                sudo chown -R ${DEPLOY_USER}:www-data ${APP_DIR}
-                cd ${APP_DIR}
+                            echo "🔁 Pulling latest code..."
+                            if [ ! -d .git ]; then
+                                git clone ${GIT_REPO} .
+                            else
+                                git fetch --all
+                                git reset --hard origin/${GIT_BRANCH}
+                            fi
 
-                echo "🔁 Pulling latest code..."
-                if [ ! -d .git ]; then
-                  git clone ${GIT_REPO} .
-                else
-                  git fetch --all
-                  git reset --hard origin/${GIT_BRANCH}
-                fi
+                            echo "📦 Installing dependencies..."
+                            composer install --no-dev --optimize-autoloader
 
-                echo "📦 Installing dependencies..."
-                composer install --no-dev --optimize-autoloader
+                            echo "🧹 Fixing file ownership and permissions..."
+                            sudo chown -R www-data:www-data storage bootstrap/cache
+                            sudo chmod -R 775 storage bootstrap/cache
 
-                echo "🧹 Fixing file ownership and permissions..."
-                sudo chown -R www-data:www-data storage bootstrap/cache
-                sudo chmod -R 775 storage bootstrap/cache
+                            echo "⚙️ Running Laravel optimizations..."
+                            php artisan migrate --force
+                            php artisan config:clear
+                            php artisan config:cache
+                            php artisan view:clear
 
-                echo "⚙️ Running Laravel optimizations..."
-                php artisan migrate --force
-                php artisan config:clear
-                php artisan config:cache
-                php artisan view:clear
+                            echo "🔄 Restarting PHP-FPM and reloading Nginx..."
+                            sudo systemctl restart ${PHP_SERVICE} || true
+                            sudo systemctl reload nginx
 
-                echo "🔄 Restarting PHP-FPM and reloading Nginx..."
-                sudo systemctl restart php7.4-fpm || true
-                sudo systemctl reload nginx
-
-                echo "✅ Deployment completed successfully!"
-            '     
-            '''
+                            echo "✅ Deployment completed successfully!"
+                        '
+                    '''
                 }
-              }
-          }
-
-    post {
-        success {
-            echo "✅ Deployment successful — EC2 instance updated with latest code!"
-        }
-        failure {
-            echo "❌ Deployment failed. Check Jenkins logs for details."
+            }
         }
     }
-}
-    
+
     post {
         success {
             echo "✅ Deployment successful — EC2 instance updated with latest code!"
