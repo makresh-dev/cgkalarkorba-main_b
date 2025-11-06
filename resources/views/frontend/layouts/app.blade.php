@@ -124,7 +124,7 @@
 
           <div class="col-lg-3 col-md-6">
             <div class="footer-info">
-              <h5>छत्तीसगढ़ कलार महासभा</h5>
+              <h5>छत्तीसगढ़ कलार महासभा Korba</h5>
               <p>
                  कोरबा परिक्षेत्र <br>
                  युवक-युवती पंजीयन/आवेदन<br><br>
@@ -154,7 +154,7 @@
           </div>
 
           <div class="col-lg-3 col-md-6 footer-newsletter">
-            <h4>Online Payment</h4>
+            <h4>Online Payments are accepted through:</h4>
             <img src="{{ asset('public/assets/our-img/paytm.png') }}" alt="..." style="height: 52px" alt="..." class="img-thumbnail">
             <img src="{{ asset('public/assets/our-img/google-pay.png') }}" alt="..."style="height: 52px" alt="..." class="img-thumbnail">
             <img src="{{ asset('public/assets/our-img/PhonePe-Logo.wine.png') }}"  style="height: 52px" alt="..." class="img-thumbnail">
