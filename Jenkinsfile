@@ -8,7 +8,7 @@ pipeline {
     }
 
     environment {
-        GIT_REPO = 'https://github.com/msh-dev/cgk-main_b.git'
+        GIT_REPO = 'https://github.com/makresh-dev/cgkalarkorba-main_b.git'
         GIT_BRANCH = 'main'
         GIT_CREDENTIALS = 'github-token'
         SSH_CREDENTIALS = 'deploy-key'
@@ -35,7 +35,6 @@ pipeline {
                     sh """
                     ssh -o StrictHostKeyChecking=no ${DEPLOY_USER}@${DEPLOY_SERVER} << 'EOF'
                         echo '📦 Starting deployment at \$(date)'
-                        
                         # Ensure app directory exists
                         sudo mkdir -p ${APP_DIR}
                         sudo chown -R ${DEPLOY_USER}:www-data ${APP_DIR}
@@ -60,7 +59,6 @@ pipeline {
                         php artisan migrate --force
                         php artisan config:clear
                         php artisan config:cache
-                        php artisan route:cache
                         php artisan view:clear
 
                         echo '🔄 Restarting PHP-FPM and reloading Nginx...'
