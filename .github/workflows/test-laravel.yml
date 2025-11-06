@@ -1,4 +1,4 @@
-name: 🧪 Test Laravel with MySQL in Docker
+name: 🧪 Test Laravel in Docker
 
 on:
   push:
@@ -9,6 +9,7 @@ on:
 jobs:
   laravel-test:
     runs-on: ubuntu-latest
+
     services:
       mysql:
         image: mysql:8.0
@@ -21,7 +22,7 @@ jobs:
           --health-cmd="mysqladmin ping --silent"
           --health-interval=10s
           --health-timeout=5s
-          --health-retries=5
+          --health-retries=10
 
     steps:
       - name: 🧩 Checkout repository
@@ -30,7 +31,15 @@ jobs:
       - name: 🐳 Build Laravel Docker image
         run: docker build -t laravel-test -f docker/Dockerfile .
 
-      - name: ⚙️ Run migrations and verify DB connection
+      - name: ⚙️ Wait for MySQL to become ready
+        run: |
+          for i in {1..10}; do
+            nc -z 127.0.0.1 3306 && echo "✅ MySQL is up!" && break
+            echo "⏳ Waiting for MySQL..."
+            sleep 5
+          done
+
+      - name: ⚙️ Run Laravel migrations
         run: |
           docker run --rm \
             --network host \
