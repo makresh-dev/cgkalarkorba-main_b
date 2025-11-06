@@ -9,7 +9,7 @@ pipeline {
     environment {
         GIT_REPO = 'https://github.com/makresh-dev/cgkalarkorba-main_b.git'
         GIT_BRANCH = 'main'
-        SSH_CREDENTIALS = 'ubuntu'        // ✅ SSH key credentials ID in Jenkins
+        SSH_CREDENTIALS = 'deploy-key'        // ✅ SSH key credentials ID in Jenkins
         DEPLOY_USER = 'ubuntu'
         DEPLOY_SERVER = '52.45.58.115'
         APP_DIR = '/var/www/cgkalarkorba-main_b'
