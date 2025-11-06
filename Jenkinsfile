@@ -2,18 +2,20 @@ pipeline {
     agent any
 
     triggers {
-        // 🔁 Trigger every 2 minutes (or replace with GitHub webhook)
+        // 🔁 Trigger every 2 minutes (replace with GitHub webhook if needed)
         pollSCM('H/2 * * * *')
+        // OR comment the above and use webhook in GitHub pointing to your Jenkins server
     }
 
     environment {
-        GIT_REPO = 'https://github.com/makresh-dev/cgkalarkorba-main_b.git'
+        GIT_REPO = 'https://github.com/msh-dev/cgk-main_b.git'
         GIT_BRANCH = 'main'
         GIT_CREDENTIALS = 'github-token'
         SSH_CREDENTIALS = 'deploy-key'
         DEPLOY_USER = 'ubuntu'
-        DEPLOY_SERVER = '52.45.58.115'
+        DEPLOY_SERVER = '52.4.58.15'
         APP_DIR = '/var/www/cgkalarkorba-main_b'
+        PHP_SERVICE = 'php7.4-fpm'
     }
 
     stages {
@@ -28,11 +30,13 @@ pipeline {
         stage('Deploy to EC2') {
             steps {
                 echo "🚀 Deploying code to EC2 instance..."
+
                 sshagent(credentials: ["${SSH_CREDENTIALS}"]) {
                     sh """
-                    ssh -o StrictHostKeyChecking=no ${DEPLOY_USER}@${DEPLOY_SERVER} "
+                    ssh -o StrictHostKeyChecking=no ${DEPLOY_USER}@${DEPLOY_SERVER} << 'EOF'
                         echo '📦 Starting deployment at \$(date)'
-
+                        
+                        # Ensure app directory exists
                         sudo mkdir -p ${APP_DIR}
                         sudo chown -R ${DEPLOY_USER}:www-data ${APP_DIR}
                         cd ${APP_DIR}
@@ -48,18 +52,23 @@ pipeline {
                         echo '📦 Installing dependencies...'
                         composer install --no-dev --optimize-autoloader
 
+                        echo '🧹 Fixing file ownership and permissions...'
+                        sudo chown -R www-data:www-data storage bootstrap/cache
+                        sudo chmod -R 775 storage bootstrap/cache
+
                         echo '⚙️ Running Laravel optimizations...'
                         php artisan migrate --force
                         php artisan config:clear
                         php artisan config:cache
+                        php artisan route:cache
                         php artisan view:clear
 
-                        echo '🔄 Reloading Nginx...'
-                        sudo systemctl daemon-reload
+                        echo '🔄 Restarting PHP-FPM and reloading Nginx...'
+                        sudo systemctl restart ${PHP_SERVICE}
                         sudo systemctl reload nginx
 
                         echo '✅ Deployment completed successfully!'
-                    "
+                    EOF
                     """
                 }
             }
