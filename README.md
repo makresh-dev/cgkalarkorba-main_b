@@ -86,7 +86,7 @@ To make Slack integration work, you must set the following secrets in your repos
 
 ---
 
-## 📈 Mermaid Diagram — Workflow Visualization
+## 📈 Workflow Visualization
 
 ```mermaid
 flowchart TD;
