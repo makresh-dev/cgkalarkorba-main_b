@@ -105,4 +105,3 @@ flowchart TD;
 ```
 [![ETL Pipeline Test](https://github.com/makresh-dev/cgkalarkorba-main_b/actions/workflows/test-laravel.yml/badge.svg)](https://github.com/makresh-dev/cgkalarkorba-main_b/actions/workflows/test_1.yml)![PHP Version](https://img.shields.io/badge/PHP-%3E%3D%208.1-blue?logo=php) ![Laravel Version](https://img.shields.io/badge/Laravel-8.x-red?logo=laravel) ![Last Commit](https://img.shields.io/github/last-commit/makresh-dev/cgkalarkorba-main_b) ![License](https://img.shields.io/badge/license-MIT-green) ![Issues](https://img.shields.io/github/issues/makresh-dev/cgkalarkorba-main_b)
 
-![PHP Version](https://img.shields.io/github/packagist/php-v/makresh-dev/cgkalarkorba-main_b) ![Laravel Version](https://img.shields.io/github/packagist/php-v/makresh-dev/cgkalarkorba-main_b)
